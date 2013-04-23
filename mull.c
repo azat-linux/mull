@@ -14,7 +14,8 @@
 #include <linux/slab.h>
 #include <linux/types.h>
 #include <linux/fs.h>
-#include <asm/uaccess.h> /* for put_user */
+#include <asm/uaccess.h> /* for copy_from_user */
+#include <linux/time.h>
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Azat Khuzhin <a3at.mail@gmail.com>");
@@ -44,6 +45,8 @@ module_exit(mullExit);
 
 static int majorNumber;
 static int deviceOpened = 0; /* prevent multiple access to device */
+static struct timeval start;
+static ulong bytesRecieved;
 
 static ulong memoryBufferSize = 1 << 10;
 module_param(memoryBufferSize, ulong, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
@@ -86,16 +89,38 @@ static int deviceOpen(struct inode *inode, struct file *file)
     deviceOpened++;
     try_module_get(THIS_MODULE);
 
+    do_gettimeofday(&start);
+    bytesRecieved = 0;
+
     printk(KERN_INFO "mull: device is opened\n");
     return SUCCESS;
 }
 
 static int deviceRelease(struct inode *inode, struct file *file)
 {
+    struct timeval end;
+    int secondsRunning;
+
+    do_gettimeofday(&end);
+
     deviceOpened--;
     module_put(THIS_MODULE);
 
-    printk(KERN_INFO "mull: device is released\n");
+    /**
+     * TODO: write this in normal way
+     */
+    secondsRunning = end.tv_sec - start.tv_sec;
+    if (!secondsRunning) {
+        secondsRunning = 1;
+    }
+
+    bytesRecieved = (bytesRecieved / 1024 /*K*/ / 1024 /*M*/);
+    if (!bytesRecieved) {
+        bytesRecieved = 1;
+    }
+
+    printk(KERN_INFO "mull: device is released (speed: %ld MBs)\n",
+                     (ulong)((double)bytesRecieved / secondsRunning));
     return SUCCESS;
 }
 
@@ -119,6 +144,8 @@ static ssize_t deviceWrite(struct file *filePtr, const char *buffer,
     if (copy_from_user(circularBuffer, buffer, length)) {
         return -EFAULT;
     }
+
+    bytesRecieved += length;
 
     return length;
 }
