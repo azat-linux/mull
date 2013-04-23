@@ -1,0 +1,2 @@
+This module create /dev/mull (null + mem)
+It didn't save anything to memory, just test speed.
