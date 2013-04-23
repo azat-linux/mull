@@ -4,6 +4,14 @@
  * It didn't save anything to memory, just test speed.
  *
  * It use circular buffer.
+ *
+ * Links:
+ * http://www.tldp.org/LDP/lkmpg/2.6/html/x569.html
+ * http://www.imada.sdu.dk/~daniel/DM510/assignment2/ldd-examples/scull/main.c
+ *
+ * TODO:
+ * http://www.kernelthread.com/publications/faq/335.html#t2
+ * http://www.mjmwired.net/kernel/Documentation/trace/ftrace.txt
  */
 
 #include <linux/module.h>
