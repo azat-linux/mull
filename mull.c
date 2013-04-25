@@ -108,6 +108,7 @@ static int deviceRelease(struct inode *inode, struct file *file)
 {
     struct timeval end;
     int secondsRunning;
+    ulong mebibitsRecieved;
 
     do_gettimeofday(&end);
 
@@ -122,13 +123,13 @@ static int deviceRelease(struct inode *inode, struct file *file)
         secondsRunning = 1;
     }
 
-    bytesRecieved = (bytesRecieved / 1024 /*K*/ / 1024 /*M*/);
-    if (!bytesRecieved) {
-        bytesRecieved = 1;
+    mebibitsRecieved = (bytesRecieved / 1024 /*K*/ / 1024 /*M*/);
+    if (!mebibitsRecieved) {
+        mebibitsRecieved = 1;
     }
 
-    printk(KERN_INFO "mull: device is released (speed: %ld MBs)\n",
-                     (ulong)((double)bytesRecieved / secondsRunning));
+    printk(KERN_INFO "mull: device is released (size: %lu MiB, speed: %ld MiB/s)\n",
+                     mebibitsRecieved, (long)((double)mebibitsRecieved / secondsRunning));
     return SUCCESS;
 }
 
